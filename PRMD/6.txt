@@ -50,7 +50,7 @@ begin
         end loop;
         imprimirTotal(total);
         total:= 0;
-        id:= generarArtículo();
+        id:= generarArtículo
     end loop;
 end oficinaCentral;
 

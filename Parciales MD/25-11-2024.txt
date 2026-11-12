@@ -1,0 +1,130 @@
+1. La UNLP está organizando su maratón anual y P personas que deben pasar a retirar su remera y chip 
+antes de la carrera. Para ello, los corredores deben dirigirse al edificio de Rectorado, donde habrá 
+un organizador que los atenderá. Los corredores son atendidos de acuerdo con el orden de llegada, 
+teniendo prioridad los corredores ancianos sobre los jóvenes y adultos. Adicionalmente, los corredores 
+con discapacidad tienen prioridad sobre todos los anteriores. Para ser atendidos, los corredores entregan 
+su DNI al organizador, quien como respuesta les entrega la remera oficial y el chip asociado. Implemente 
+un programa que permita resolver el problema anterior usando PMA. Notas: para conocer su prioridad, cada 
+corredor puede llamar a la función obtenerPrioridad(), la cual retorna 0 si la persona tiene alguna 
+discapacidad, 1 si es anciana, o 2 en otro caso; la función obtenerRyC(dni) retorna la remera y el chip 
+asociado para el DNI recibido como entrada; la función obtenerDNI() retorna el DNI para el corredor que 
+la invoca.
+
+prioridades (discapacitados>ancianos>resto) - orden de llegada - 
+
+chan ancianos(integer,integer);
+chan discapacitados(integer,integer);
+chan resto(integer,integer);
+chan personas[P-1](String);
+
+Process persona[id: 0..P-1]{
+    string dni; //CONOCIDO
+    int prioridad = obtenerPrioridad();
+    string RyC;
+
+    if(prioridad = 0){
+        send discapacitados(id,dni);
+    }
+    else if(prioridad = 1){
+        send viejos(id,dni);
+    }
+    else{
+        send resto(id,dni);
+    }
+    receive personas[id](RyC);
+    correr();
+}
+
+Process organizador{
+    integer id,dni;
+    string RyC;
+
+    for i = 1..P{
+        if(!isEmpty(discapacitados)); receive discapacitados(id,dni) ->
+            RyC = obtenerRyC(dni);
+            send personas[id](RyC);
+        [] if(isEmpty(discapacitados) and !isEmpty(ancianos)); receive ancianos(id,dni) ->
+            RyC = obtenerRyC(dni);
+            send personas[id](RyC);
+        [] if(isEmpty(discapacitados) and isEmpty(ancianos) and !isEmpty(resto)); receive resto(id,dni) ->
+            RyC = obtenerRyC(dni);
+            send personas[id](RyC);
+        fi;
+    }
+}
+
+2. Las unidades postales (UP) son sucursales de correo que se ocupan habitualmente de recibir y entregar 
+paquetes. En particular, la UP 16 sólo se ocupa de entregar paquetes a las personas que se presentan a 
+retirarlos y cuenta con un único empleado. Como los clientes pueden tener que esperar para su atención, 
+muchos aprovechan la plaza que está frente a la UP16 para hacer ejercicio. Los clientes son atendidos por 
+orden de llegada y se dividen en dos clases: los clientes "pacientes" que esperan a lo sumo 10 minutos a 
+que el empleado los atienda y, pasado ese plazo, dan una vuelta a la plaza; y los clientes "ansiosos" que 
+exigen atención inmediata y sino se van a dar una vuelta a la plaza. Más allá del tipo de cliente, luego 
+de 3 intentos sin lograr que lo atiendan, el cliente se retira sin el paquete. 
+El proceso de atención 
+consiste en que el empleado le entrega un paquete al cliente, dado el código QR provisto por éste. 
+Implemente un programa que permita modelar el funcionamiento de la UP 16 usando ADA, asumiendo que hay N1 
+clientes "pacientes" y N2 clientes "ansiosos", y que todos retiran un único paquete. Además, asuma que 
+no habrá códigos QRs erróneos ni paquetes faltantes. Notas: la función obtenerQR() retorna el código QR 
+asociado al cliente que la invoca; obtenerPaquete(qr) retorna el paquete asociado al QR recibido como 
+entrada; la función caminata() modela la vuelta a la plaza.
+
+N cliente 1 empleado - orden de llegada - pacientes (10 mins espera, dan vuelta a la plaza) y 
+ansiosos (atencion inmediata sino dan una vuelta a la plaza), todos esperan 3 veces
+
+task type ansioso is
+end ansioso;
+Vansiosos: array(0..N2) of ansioso;
+
+task type paciente is
+end paciente
+Vpacientes: array(0..N1) of paciente
+
+task empleado is
+    entry atencion(QR: IN string, paquete: OUT string);
+end empleado;
+
+
+task body paciente is
+    intentos: integer = 0;
+    QR: string := obtenerQR();
+    ok: boolean = true;
+    paquete: string;
+begin
+    while(intentos < 3) and (ok)loop
+        select
+            empleado.atencion(QR,paquete);
+            ok:= false;
+        or delay 600
+            caminata();
+            intentos:= intentos + 1;
+        end select;
+    end loop;
+end paciente;
+
+task body ansioso is
+    intentos: integer = 0;
+    QR: string := obtenerQR();
+    ok: boolean = true;
+    paquete: string;
+begin
+    while(intentos < 3) and (ok)loop
+        select
+            empleado.atencion(QR,paquete);
+            ok:= false;
+        else 600
+            caminata();
+            intentos:= intentos + 1;
+        end select;
+    end loop;
+end ansioso;
+
+task body empleado is
+    paquete,QR: string;
+begin
+    for i = 1..N1+N2 loop
+        accept atencion(QR: IN string, paquete: OUT string) do
+            paquete:= obtenerPaquete(QR);
+        end atencion;
+    end loop;
+end empleado;
