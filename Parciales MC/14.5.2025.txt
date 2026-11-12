@@ -1,0 +1,144 @@
+1) Resolver con SEMAFOROS el siguiente problema. Sse tiene un vector de 1.000.000 de numeros, del cual se debe obtener
+el promedio de sus valores utilizando 10 procesos Worker, al terminar todos los procesos Worker deben imprimir el resultado.
+Nota: maxizimizar la concurrencia; unicamente se pueden usar los 10 proecsos Worker
+
+P = 10;
+N = 1000000
+int sumaTotal = 0;
+int vector[N];
+sem mutex = 1;
+sem barrera = 1;
+sem espero = 0;
+int terminados = 0;
+
+process Worker(id: 0..P-1){
+    int suma = 0;
+    
+    int parte = N/P;
+    int extra = 0;
+    int inicio = id*parte;
+    if(id == P-1){
+        extra = N mod P-1;
+    }
+    for(i=inicio; i<parte+parte+extra; i++){
+        suma += vector[i];
+    }
+    real promedio = suma / parte;
+    P(mutex);
+    sumaTotal +=  promedio;
+    V(mutex);
+    P(barrera);
+    termiandos++;
+    if(termiandos == 10){
+        for(i=0; i<9; i++) V(espero);
+    }
+    P(espero);
+    writeln(sumaTotal / 10);
+
+}
+
+
+2) SEMAFOROS. A una acopiadora de cereales llegan 20 camiones que deben descargar su cereal. Los camiones se descargan de a uno por vez, y de acuerdo con el orden de 
+llegada. Una vez que el camion llego, espera a que llegue su turno para comenzar a descargar su cereal. Nota: solo se pueden usar procesos que represente a los camiones,
+cada camion desacarga solo una vez; la descarga del camion se simula por medio de la funcion DESCARGAR() llamada por el camion
+
+int N = 20;
+Cola llegada;
+sem mutex = 1;
+sem espera[N] = (*,0);
+boolean libre = true;
+
+process camion(id: 0..N-1){
+    int idaux;
+
+    P(mutex);
+    if(libre){
+        libre = false;
+        V(mutex);
+    }
+    else{
+        llegada.push(id);
+        V(mutex);
+        P(espera[id]);
+    }
+    DESCARGAR();
+    P(mutex);
+    if(llegada.isEmpty()){
+        libre = true;
+        V(mutex)
+    }
+    else{
+        idaux = llegada.pop;
+        V(mutex);
+        V(espera[idaux]);
+    }
+}
+
+
+
+
+3) MONITORES. En una catedra hay un profesor, un auxiliar y 100 alumnos. Cada alumno continuamente hace consultas que pueden ser de dos tipo: Teoricas y Practicas; cada vez que tiene
+una consulta para hacer, se la envia por mail al docente correspondiente; y espera que este le envie la respuesta. El profesor solo atiene consultas TEORICAS y el auxiliar solo 
+consultas PRACTICAS; cada uno resuelve sus consultas de acuerdo con orden de llegada. Nota: maximizar concurrencia; el alumno sabe de que tipo es cada consulta; los procesos
+NO deben terminar
+
+process Alumno(id: 0..99){
+    Consulta c;
+    while(true){
+        c = generarConsulta();
+        if(c.tipo == "teorica"){
+            docenteId = 0;     //pregunta teorica para el profesor
+        }
+        else{
+            docenteId = 1;     //pregunta practica para el auxiliar
+        }
+        Docente[docenteId].consultar(id,c,respuesta);
+    }
+}
+
+process Profesor{
+    Respuesta res;
+    int id;
+    Consulta consulta:
+    while(true){
+        Docente[0].atender(id,consulta);
+        res = Responder(consulta)
+        Docente[0].resultado(id,res);
+    }
+}
+
+process auxiliar{
+    Respuesta res;
+    int id;
+    Consulta consulta:
+    while(true){
+        Docente[1].sig(id,consulta);
+        res = Responder(consulta)
+        Docente[1].resultado(id,res);
+    }
+}
+
+Monitor Docente[id: 0..1]{
+    cond espera, consulta;
+    Respuesta consultas[100];
+    Cola c;
+
+    consultar(int in id; Consulta in c; Respuesta out r){
+        c.push(id,c);
+        signal(consulta);
+        wait(espera)
+        r = consultas[id];
+    }
+
+    sig(int out id; Consulta out c){
+        id(c.isEmpty()){
+            wait(conuslta);
+        }
+        c.pop(id,consulta);
+    }
+
+    resultado(int in id; Respuesta out res){
+        consultas[id] = res;
+        signal(espera);
+    }
+}

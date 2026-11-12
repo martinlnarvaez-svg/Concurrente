@@ -1,0 +1,109 @@
+En un examen final hay N alumnos y P profesores. Cada alumno resuelve su examen, lo
+entrega y espera a que alguno de los profesores lo corrija y le indique la nota. Los
+profesores corrigen los exámenes respetando el orden en que los alumnos van entregando.
+a) Considerando que P=1.
+b) Considerando que P>1.
+c) Ídem b) pero considerando que los alumnos no comienzan a realizar su examen hasta
+que todos hayan llegado al aula.
+Nota: maximizar la concurrencia; no generar demora innecesaria; todos los procesos deben
+terminar su ejecución
+
+a)
+
+Process Alumno[id: 0..N-1]{
+    Texto examen;
+    Admin!examenTerminado(examen);
+    Profesor?correcion(examen);
+}
+
+Process Profesor{
+    Texto examen;
+    for i=0; i<N; i++{
+        Admin!aviso();
+        Admin?enviarExamen(examen);
+        Texto corregido = corregir(examen);
+        Alumno!correcion(corregido);
+    }
+}
+
+Process Admin{
+    cola terminados;
+    for int i=0; i<N*2; i++{
+        if Alumno?examenTerminado(examen) -> terminados.push(examen);
+        [] (not empty(terminados)); Profesor?aviso() -> Profesor!enviarExamen(cola.pop);
+    }
+}
+
+b)
+
+Process Alumno[id: 0..N-1]{
+    Texto examen;
+    Admin!examenTerminado(examen,idA);
+    Profesor[*]?correcion(examen);
+}
+
+Process Profesor[id: 0..P-1]{
+    Texto examen = "aa";
+    int idA;
+    Admin!aviso(id);
+    Admin?enviarExamen(examen,idA);
+    while(examen != null){
+        Texto corregido = corregir(examen);
+        Alumno[idA]!correcion(corregido);
+        Admin!aviso(id);
+        Admin?enviarExamen(examen,idA);
+    }
+}
+
+Process Admin{
+    cola terminados;
+    int idP,idA;
+    for int i=0; i<N*2; i++{
+        if Alumno[*]?examenTerminado(examen,idA) -> terminados.push(examen,idA);
+        [] (not empty(terminados)); Profesor[*]?aviso(idP) -> Profesor[idP]!enviarExamen(cola.pop);
+    }
+    for i=0; i<P; i++{
+        Profesor?aviso(idP);
+        Profesor!enviarExamen(null,null);
+    }
+}
+
+c)
+
+Process Alumno[id: 0..N-1]{
+    Texto examen;
+    Admin!llegue();
+    Admin?arranca();
+    Admin!examenTerminado(examen,idA);
+    Profesor[*]?correcion(examen);
+}
+
+Process Profesor[id: 0..P-1]{
+    Texto examen = "aa";
+    int idA;
+    Admin!aviso(id);
+    Admin?enviarExamen(examen,idA);
+    while(examen != null){
+        Texto corregido = corregir(examen);
+        Alumno[idA]!correcion(corregido);
+        Admin!aviso(id);
+        Admin?enviarExamen(examen,idA);
+    }
+}
+
+Process Admin{
+    cola terminados;
+    int idP,idA;
+
+    for int i=0; i<N; i++ Alumno[*]?llegue();
+    for i=0; i<N; i++ Alumno[i]!arranca();
+
+    for i=0; i<N*2; i++{
+        if Alumno[*]?examenTerminado(examen,idA) -> terminados.push(examen,idA);
+        [] (not empty(terminados)); Profesor[*]?aviso(idP) -> Profesor[idP]!enviarExamen(cola.pop);
+    }
+    for i=0; i<P; i++{
+        Profesor?aviso(idP);
+        Profesor!enviarExamen(null,null);
+    }
+}

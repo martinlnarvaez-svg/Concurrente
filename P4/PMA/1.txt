@@ -1,0 +1,92 @@
+1. Suponga que N clientes llegan a la cola de un banco y que serán atendidos por sus
+empleados. Analice el problema y defina qué procesos, recursos y canales/comunicaciones
+serán necesarios/convenientes para resolverlo. Luego, resuelva considerando las siguientes
+situaciones:
+a. Existe un único empleado, el cual atiende por orden de llegada.
+b. Ídem a) pero considerando que hay 2 empleados para atender, ¿qué debe
+modificarse en la solución anterior?
+c. Ídem b) pero considerando que, si no hay clientes para atender, los empleados
+realizan tareas administrativas durante 15 minutos. ¿Se puede resolver sin usar
+procesos adicionales? ¿Qué consecuencias implicaría?
+
+a.
+chan cola(txt,int)
+chan respuestas[N](txt)
+
+Process Cliente[id: 0..N-1]{
+    txt res, C
+    C = ClienteLLega()
+    send cola(C,id)
+    receive respuestas[id](res)
+}
+
+Process Empleado{
+    txt preg, res
+    int idC
+    while(true){
+        receive cola(preg,idC)
+        res ResolverConsulta(preg)
+        send respuestas[idC](res)    
+    }
+}
+
+b.
+chan cola(txt,int)
+chan respuestas[N](txt)
+
+Process Cliente[id: 0..N-1]{
+    txt res, C
+    C = ClienteLLega()
+    send cola(C,id)
+    receive respuestas[id](res)
+}
+                                            //Se mantiene la solucion de 1 pero ahora con dos Empleados
+Process Empleado[id: 0..1]{
+    txt preg, res
+    int idC
+    while(true){
+        receive cola(preg,idC)
+        res ResolverConsulta(preg)
+        send respuestas[idC](res)    
+    }
+}
+
+c.
+Se podria resolver sin un proceso intermedio pero esto generaria una demora innecesaria ya que al momento que los procesos
+Empleado tengan que leer el canal de reportes lo podrian leer como lleno y que solo 1 tome la tarea, por lo que se trabarian
+en el siguiente receive o romperian el programa
+La mejor solucion es la siguiente:
+
+chan cola(txt,int)
+chan respuestas[N](txt)
+chan pedido(int);
+chan siguiente[2](txt,int);
+
+Process Cliente[id: 0..N-1]{
+    txt res, C
+    C = ClienteLLega()
+    send cola(C,id)
+    receive respuestas[id](res)
+}
+
+Process Empleado[id: 0..1]{
+    txt preg, res
+    int idC
+    while(true){
+        send pedido(id);
+        receive siguiente[id](preg,idC)
+        res ResolverConsulta(preg)
+        send respuestas[idC,res]
+    }
+}
+
+process Admin{
+    txt res, preg
+    int idE, idC
+    while(true){
+        receive pedido(idE)
+        if(empty(cola)) res = "VACIO"
+        else receive cola(preg,idC)
+        send siguiente[idE](preg,idC);
+    }
+}

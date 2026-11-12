@@ -1,0 +1,71 @@
+Dada la siguiente solución de grano grueso:
+a) Indicar si el siguiente código funciona para resolver el problema de
+Productor/Consumidor con un buffer de tamaño N. En caso de no funcionar, debe
+hacer las modificaciones necesarias.
+
+int cant = 0; int pri_ocupada = 0; int pri_vacia = 0; int buffer[N];
+
+Process Productor::
+{ while (true)
+    { produce elemento
+    <await (cant < N); cant++>
+    buffer[pri_vacia] = elemento;
+    pri_vacia = (pri_vacia + 1) mod N;
+    }
+}
+
+Process Consumidor::
+{ while (true)
+    { <await (cant > 0); cant-- >
+    elemento = buffer[pri_ocupada];
+    pri_ocupada = (pri_ocupada + 1) mod N;
+    consume elemento
+    }
+}
+
+b) Modificar el código para que funcione para C consumidores y P productores.
+
+a) Si luego del <await (cant < N); cant++> del productor se ejecuta el consumidor y este ultimo consume la posicion del buffer que el productor esta
+por cargar, se generaria una lectura a una parte del buffer vacia. La linea  buffer[pri_vacia] = elemento; debe ser parte de la SC. Y a su vez podria
+pasar que le productor produzca en el lugar que el consumidor esta por consumir, por lo tanto la linea elemento = buffer[pri_ocupada]; del consumidor
+deberia ser SC
+
+    Process Productor::
+    { while (true)
+        { produce elemento
+        <await (cant < N); cant++
+        buffer[pri_vacia] = elemento;>
+        pri_vacia = (pri_vacia + 1) mod N;
+        }
+    }
+
+    Process Consumidor::
+    { while (true)
+        { <await (cant > 0); cant-- 
+        elemento = buffer[pri_ocupada];>
+        pri_ocupada = (pri_ocupada + 1) mod N;
+        consume elemento
+        }
+    }
+
+b)
+
+int productores = P; int consumidores = C; int pri_vacia = 0; int pri_ocupada = 0; int buffer[N]; int cant = 0;
+
+    process Productor[id: 0.. productores-1]{
+        while(true){
+            producir elemento
+            <await (cant < N); cant++
+            buffer[pri_vacia] = elemento;
+            pri_vacia = (pri_vacia + 1) mod N>
+        }
+    }
+
+    process Consumidor[id: 0.. consumidores-1]{
+        while(true){
+            <await (cant > 0); cant-- 
+            elemento = buffer[pri_ocupada];
+            pri_ocupada = (pri_ocupada + 1) mod N;>
+            consume elemento
+        }
+    }

@@ -1,0 +1,19 @@
+Realice una solución concurrente de grano grueso (utilizando <> y/o <await B; S>) para el
+siguiente problema. Dado un número N verifique cuántas veces aparece ese número en un
+arreglo de longitud M. Escriba las pre-condiciones que considere necesarias.
+
+precondiciones: 
+    -Arreglo de M numeros
+    -Buscar cuantas veces aparece el numero N en el arreglo M
+    -Va a terminar habiendo tantos procesos como elementos en el arreglo
+
+int total = 0; int V[M] = ...; int N = ...;
+
+process buscar[id: 0..M-1]{
+    if(V[id] == N){
+        <total := total + 1;>
+    }
+}
+
+Se inicializan variables compratidas (total, el arreglo y el numoro buscar), Luego se define el proceso buscar con ids de 0 a longitud del arreglo - 1.
+Luego se pregunta por el numero del arreglo en la posicion del id asignado, de ser igual se entra a una SC en la que se incrementa en 1 el total

@@ -1,0 +1,92 @@
+Una empresa de limpieza se encarga de recolectar residuos en una ciudad por medio de 3
+camiones. Hay P personas que hacen reclamos continuamente hasta que uno de los
+camiones pase por su casa. Cada persona hace un reclamo y espera a lo sumo 15 minutos a
+que llegue un camión; si no pasa, vuelve a hacer el reclamo y a esperar a lo sumo 15
+minutos a que llegue un camión; y así sucesivamente hasta que el camión llegue y recolecte
+los residuos. Sólo cuando un camión llega, es cuando deja de hacer reclamos y se retira.
+Cuando un camión está libre la empresa lo envía a la casa de la persona que más reclamos
+ha hecho sin ser atendido. Nota: maximizar la concurrencia.
+
+hay 3 camiones y p personas
+la persona reclama y espera 15 mins a que llegue el camion, si no pasa reclama de nuevo
+    y espera a lo sumo 15 mins y asi sucesivamente hasta que el camion llegue
+cuando un camion esta libre la empresa lo envia a la casa de la persona con mas reclamos
+
+Procedure limpieza is
+
+    task type persona is
+        entry identificar(id: IN integer);
+        entry llegaCamion;
+    end persona;
+    Vpersonas: array(0..P) of persona;
+    task body persona is
+        id: integer;
+        seguir:= true;
+    begin
+        accept identificar(id: IN integer);
+        while (seguir) loop
+            empresa.reclamo(id);
+            select
+                accept llegaCamion do
+                    seguir:= false;
+                end llegaCamion;
+            or delay 900
+                null
+            end select;
+        end loop;
+    end persona;
+
+    task type camion
+    Vcamiones: array(1..3) of camion;
+    task body camion is
+        idSig: integer;
+    begin
+        loop
+            empresa.pasarCamion(idSig);
+            pasarPorCasaDeId(idSig);
+            Vpersonas(idSig).llegaCamion;
+        end loop;
+    end camion;
+
+    task empresa is
+        entry reclamo(id: IN integer);
+        entry pasarCamion(id: OUT integer);
+    end empresa;
+    task body empresa is
+        reclamos: array(1..P): integer;
+        i,max,id: integer;
+        cantReclamos: integer := 0;
+        cantMax: integer := 0;
+    begin
+        for i 1..P loop
+            reclamos(i):= 0;
+        end loop;
+        loop
+            select
+                accept reclamo(id: IN integer);
+                    if(reclamos(id) = 0) then
+                        cantReclamos:= cantReclamos + 1;
+                    end if;
+                    reclamos(id):= reclamos(id) + 1;
+                end reclamo;
+            or
+                when(cantReclamos > 0) => accept pasarCamion(max: OUT integer);
+                    for i 1..P loop
+                        if(reclamos(i) > cantMax) then
+                            cantMax:= reclamos(i);
+                            max:= i;
+                        end if;
+                    end loop;
+                    reclamos(max):= -1;
+                    cantReclamos:= cantReclamos - 1;
+                    max:= 0;
+                end pasarCamion;
+            end select;
+        end loop;
+    end empresa;
+
+begin
+    for i 1..P Loop
+        VPersonas.identificar(i);
+    end loop;
+end limpieza;

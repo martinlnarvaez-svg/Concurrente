@@ -1,0 +1,120 @@
+1) SEMAFOROS. Se tiene un vector A de 1000000 de caracteres, del cual se debe obtener la cantidad de veces que aparecen los caracteres "F" y "C", utilizando 4 proceso Worker.
+Al terminar todos los procesos deben imprimir la cantidad de veces que aparece cada una de esas dos letras. Nota: maxizimar la concurrencia; unicamente se pueden usar los 4
+procesos Worker.
+
+int P = 4;
+int N = 1000000;
+int sumaF = 0;
+int sumaC = 0;
+sem espera[P] = 0;
+int cantTerminados = 0;
+sem mutexF = 1;
+sem mutexC = 1;
+char Vector[N];
+
+process Worker(id: 0..P-1){
+    int cantF = 0;
+    int cantC = 0;
+    int parte = N/P;
+    int inicio = parte * id;
+    int agregado = 0;
+    if(id == P-1){
+        agregado = N mod P-1
+    }
+    for(int i=inicio; i<inicio+parte+agregado; i++){
+        char letra = Vector[i];
+        if(letra == "F") cantF++;
+        else if(letra == "C") cantC++;
+    }
+    P(mutexF);
+    sumaF += cantF;
+    V(mutexF);
+    P(mutexC);
+    sumaC += cantC;
+    V(mutexC);
+    cantTerminados++;
+    if(cantTerminados == P){
+        for(i=0; i<P; i++) V(espera[i]);
+    }
+    P(espera[id]);
+    writeln(cantC);
+    writeln(cantF);
+}
+
+
+
+2) SEMAFOROS. Existen B barcos areneros que deben descargar su contenido en una playa. Los barcos se descargan de a uno por vez, y de acuerdo con orden de llegada. Una vez que el
+barco llego, espera a que le llegue su turno para comenzar a descargar su contenido, y luego se retira. Nota: solo se puede usar los procesos que representen a los barcos; cada barco
+descarga solo una vez; suponga que existe la funcion DESCARGAR() que simula que el barco esta descargando su contenido en la playa.
+
+Cola c;
+int espera[B] = (*,0);
+sem mutexCola = 1;
+boolean libre = true;
+
+process Barco(id: 0..B){
+    if(libre){
+        libre = false;
+        V(espera[id]);
+    }
+    else{
+        P(mutexCola);
+        c.push(id);
+        V(mutexCola);
+    }
+    P(espera[id]);
+    DESCARGAR();
+    P(mutexCola);
+    if(c.isEmpty){
+        libre = true;
+        V(mutexCola);
+    }
+    else{
+        int idAux = c.pop;
+        V(espera[idAux]);
+        V(mutexCola);
+    }
+}
+
+
+
+3) MONITORES. En una acopiadora de cereales hay 2 empleados, uno para atender a los camiones de maiz y otro para los de girasol. Hay 30 camiones que llegan para descargar su carga 
+(15 de maiz y 15 de girasol). Cuando el camion llega espera hasta que el empleado correspondiente le avise que puede descargar el cereal. Cada empleado hace descargar
+los camiones qe le corresponden de a uno a la vez y de acuerdo con orden de llegada. Nota: maximizar concurrencia; el camion sabe que tipo de cereal lleva; todos los procesos deben terminar
+
+process camion(id: 0..29){
+    int tipo;
+    Gestion[tipo].llego();
+    DESCARGAR();
+    Gestion[tipo].salgo();
+}
+
+Process Empleado(id: 0..1){
+    for(int i=0; i<15; i++){
+        Gestion[id].siguiente();
+    }
+}
+
+Monitor Gestion(id: 0..1){
+    int esperando = 0;
+    cond avisar;
+    cond terminado;
+    cond descargado;
+
+    procedure llego(){
+        esperando++;
+        signal(avisar);
+        wait(terminado)
+    }
+
+    procedure salgo(){
+        signal(descargado);
+    }
+
+    procedure siguiente(){
+        if(esperando == 0) wait(avisar);
+        esperando--;
+        signal(terminado);
+        wait(descargado);
+    }
+}

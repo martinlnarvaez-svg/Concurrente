@@ -1,0 +1,67 @@
+En cada ítem debe realizar una solución concurrente de grano grueso (utilizando <> y/o
+<await B; S>) para el siguiente problema, teniendo en cuenta las condiciones indicadas en el
+item. Existen N personas que deben imprimir un trabajo cada una.
+a) Implemente una solución suponiendo que existe una única impresora compartida por
+todas las personas, y las mismas la deben usar de a una persona a la vez, sin importar el
+orden. Existe una función Imprimir(documento) llamada por la persona que simula el uso
+de la impresora. Sólo se deben usar los procesos que representan a las Personas.
+b) Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada.
+c) Modifique la solución de (a) para el caso en que se deba respetar el orden dado por el
+identificador del proceso (cuando está libre la impresora, de los procesos que han
+solicitado su uso la debe usar el que tenga menor identificador).
+d) Modifique la solución de (b) para el caso en que además hay un proceso Coordinador que
+le indica a cada persona que es su turno de usar la impresora.
+
+a)
+    process persona[id: 0..N-1]{
+        Documento doc;
+        <Imprimir(doc);>
+    }
+
+b)
+    cola C;
+    int siguiente = -1;
+
+    process persona[id: 0..N-1]{
+        <if(siguiente == -1) siguiente = id;
+        else Agregar(C, id)>;
+        <await (siguiente == id)>;
+        Documento doc
+        Imprimir(doc);
+        <if(empty(C)) siguiente = -1;
+        else siguiente = Sacar(C)>;
+    }
+
+c)
+    colaEspecial C; //Esta cola a diferencia de la del punto b) agrega por orden de id
+    int siguiente = -1;
+
+    process persona[id: 0..N-1]{
+        <if(siguiente == -1) siguiente = id;
+        else Agregar(C, id)>;
+        <await (siguiente == id)>;
+        Documento doc
+        Imprimir(doc);
+        <if(empty(C)) siguiente = -1;
+        else siguiente = Sacar(C)>;
+    }
+
+d)
+    Cola C;
+    int actual = -1;
+    bool ocupada = false;
+
+    process persona[id:0..N-1]{
+        <Agregar(C,id);>
+        <await (actual == id)>;
+        Imprimir(doc);
+        ocupada = false;
+    }
+
+    process Coordinador{
+        while(true){
+            <await(!ocupada && !cola.estaVacia());
+            actual = Sacar(C);
+            ocupada = true;
+        }
+    }

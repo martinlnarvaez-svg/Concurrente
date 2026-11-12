@@ -1,0 +1,130 @@
+1) SEMAFOROS. En un laboratorio de genetica trabajan 20 empleados que deben usar un pirosecuenciador de
+a uno a la vez, de acuerdo con el orden de llegada. Nota: Solo se pueden usar los procesos que representen
+a los empleados; cada empleado usa solo una vez el pirosecuenciador; suponga que existe la funcion USAR()
+que simula el uso de este instrumento por parte del empleado
+
+boolean libre = true;
+sem espera[] = (*,0);
+Cola c;
+sem mutexCola = 1;
+sem mutexBool = 1;
+
+process Empleado(0..19){
+    P(mutexBool);
+    if(libre){
+        libre = false;
+        V(mutexBool);
+    }
+    else{
+        V(mutexBool);
+        P(mutexCola);
+        c.push(id);
+        V(mutexCola);
+        P(espera[id]);
+    }
+    USAR();
+    P(mutexCola);
+    if(c.isEmpty){
+        libre = true;
+        V(mutexCola);
+    }
+    else{
+        int idAux = c.pop;
+        V(espera[idAux]);
+    }
+}
+
+
+2) SEMAFOROS. Se tiene un vector A de 1.000.000 de numeros, del cual se debe obtener la suma de todos los
+valores utilizando 5 procesos Worker. Al terminar todos los procesos deben imprimir el resultado final.
+Nota: maximizar concurrencia; unicamente se pueden usar los 5 procesos Workers.
+
+int N = 1000000;
+int P = 5;
+sem mutex = 1;
+int canTerminados = 0;
+int sumaTotal = 0;
+int Vector[N];
+sem espero[P] = (*,0);
+
+process Worker(id: 0..P-1){
+    int parte = N / P;
+    int inicio = N*id;
+    int extra = 0;
+    if(id == P-1){
+        extra = N mod P;
+    }
+
+    for(int i=0; i<parte+inicio+extra; i++){
+        int sumaTemp += Vector[i];
+    }
+    cantTerminados++;
+    P(mutex);
+    sumaTotal += sumaTemp;
+    V(mutex);
+    if(cantTerminados == P){
+        for(i=0; i<P; i++){
+            V(espero[i]);
+        }
+    }
+    P(espero[i])
+    writeln(sumaTotal);
+}
+
+
+
+3) MONITORES. En una oficina hay un supervisor, un empleado y 50 personas que solicitan por mail una
+operacion. El empleado solo atiende CONSULTAS, mientras que el supervisor solo atiene TRAMITES; cada uno
+atiende sus pedidos de acuerdo con el orden de llegada. Cada persona envia UNA solicitud que puede ser 
+para un TRAMITE o para una CONSULTA, y luego espera a que le envien el resultado. Nota: maximizar concurrencia
+; la persona sabe de que tipo es la consulta; el empleado y el supervisor NO deben terminar su ejecucion
+
+process Supervisor{
+    while(true){
+        Gestion[0].sig(id,pre);
+        Respuesta res = RESOLVER(pre);
+        Gestion[0].res(id,res);
+    }
+}
+
+process Empleado{
+    while(true){
+        Gestion[1].sig(id,pre);
+        Respuesta res = RESOLVER(pre);
+        Gestion[1].res(id,res);
+    }
+}
+
+process Persona(id: 0..49){
+    int tipo; // ya se tiene
+    Pregunta pre;
+    Respuesta res;
+    Gestion[tipo].atender(id,pre,res);
+}
+
+Monitor Gestion(id: 0..1){
+    Cola c;
+    int idAux;
+    cond pedido;
+    cond respuesta;
+    Resultado resV[50];
+
+    procedure atender(int in id; Pregunta in pre, Respuesta out res){
+        c.push(id);
+        signal(pedido);
+        wait(respuesta);
+        res = resultados[id];
+    }
+
+    procedure sig(int out id; Pregunta out pre){
+        if(c.isEmpty()){
+            wait(pedido);
+        }
+        c.pop(id,consulta);
+    }
+
+    procedure res(int in id; Respuesta in res){
+        resultado[id] = res
+        signal(respuesta);
+    }
+}

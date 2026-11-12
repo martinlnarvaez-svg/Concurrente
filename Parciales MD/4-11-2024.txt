@@ -1,0 +1,109 @@
+1. Las unidades postales (UP) son sucursales de correo que se ocupan habitualmente de recibir y entregar 
+paquetes. En particular, la UP 16 sólo se ocupa de entregar paquetes a las personas que se presentan a 
+retirarlos. Los clientes son atendidos por orden de llegada por el primer empleado que se encuentre libre.
+Al solicitar atención, el cliente le muestra un código QR al empleado que lo atiende, el cual le entrega 
+el paquete como respuesta. Implemente un programa que permita modelar el funcionamiento de la UP 16 usando
+PMA, asumiendo que hay N clientes que retiran un único paquete y 3 empleados para atenderlos. Además, asuma 
+que no habrá códigos QR erróneos ni paquetes faltantes. 
+Notas: la función obtenerQR(idCliente) retorna el código QR asociado al identificador de cliente recibido 
+como entrada. De forma similar, obtenerPaquete(qr) retorna el paquete asociado al QR recibido como entrada.
+
+chan clienteLLega(id);
+chan entregaPaquete[N-1](String);
+
+Process cliente[id: 0..N-1]{
+    String paquete;
+
+    send clienteLLega(id,obtenerQR(id));
+    receive entregaPaquete[id](paquete);
+}
+
+Process empleado[id: 0..2]{
+    int idCliente;
+    String QR,paquete;
+
+    while(true){
+        receive clienteLLega(idCliente,QR);
+        paquete = obtenerPaquete(QR);
+        send entregaPaquete[idCliente](paquete);
+    }
+}
+
+2. Resuelva el mismo problema anterior pero ahora usando PMS.
+
+Process cliente[id: 0..N-1]{
+    String paquete;
+
+    admin!clienteLLega(id,obtenerQR(id));
+    empleado[*]?entregaPaquete(paquete);
+}
+
+Process empleado[id: 0..2]{
+    int idCliente;
+    String QR,paquete;
+
+    while(true){
+        admin.empleadoLibre(id);
+        admin.pop(idCliente,QR);
+        paquete = obtenerPaquete(QR);
+        cliente[idCliente]!entregaPaquete(paquete);
+    }
+}
+
+Process admin{
+    cola c;
+    integer idCliente, idEmpleado;
+    String QR;
+
+    do cliente[*]?clienteLLega(idCliente,QR) ->
+        C.push(idCliente,QR);
+    [] if (!c.isEmpty); empleado[*]?empleadoLibre(idEmpleado) ->
+        c.pop(idCliente,QR);
+        empleado[idEmpleado]!pop(idCliente,QR);
+    od
+}
+
+3. El problema WordCount consiste en calcular la cantidad de veces que aparece una palabra determinada en 
+una porción, documento o archivo de texto. Implemente una solución a WordCount en ADA, considerando que se 
+cuenta con una base de datos de texto distribuida en N partes. Además, existe un administrador que determina 
+la palabra que se desea buscar y se la envía a las N tareas contadoras para que la busquen en la parte de la 
+base de datos que poseen. Finalmente, el administrador calcula la cantidad total de apariciones. 
+Notas: las tareas contadoras cuentan con la función contarPalabras(pal), la cual retorna la cantidad de 
+veces que aparece la palabra pal en su parte de la base de datos. El administrador cuenta con la función 
+obtenerPalabra() que retorna la palabra a buscar. El problema se resuelve una única vez y su solución debe 
+maximizar la concurrencia.
+
+task type contador;
+Vcontadores: array(0..N-1) of contador;
+
+task admin is
+    entry solicitarPalabra(palabra: OUT string);
+    entry termine(cant: IN integer);
+end admin;
+
+
+task body contador is
+    palabra: String
+    cant: integer;
+begin
+    admin.solicitarPalabra(palabra);
+    cant:= contarPalabras(palabra);
+    admin.termine(cant);
+end contador;
+
+task body admin is
+    palabra: String;
+    cant,total: integer
+begin
+    total:= 0
+    palabra = obtenerPalabra();
+    for i = 1..N*2 loop
+        select
+            accept solicitarPalabra(palabra: OUT string);
+        or
+            accept termine(cant: IN integer) do
+                total:= total + cant;
+            end termine;
+        end select;
+    end loop;
+end admin;

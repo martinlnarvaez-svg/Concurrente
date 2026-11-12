@@ -1,0 +1,86 @@
+En una playa hay 5 equipos de 4 personas cada uno (en total son 20 personas donde cada
+una conoce previamente a que equipo pertenece). Cuando las personas van llegando
+esperan con los de su equipo hasta que el mismo esté completo (hayan llegado los 4
+integrantes), a partir de ese momento el equipo comienza a jugar. El juego consiste en que
+cada integrante del grupo junta 15 monedas de a una en una playa (las monedas pueden ser
+de 1, 2 o 5 pesos) y se suman los montos de las 60 monedas conseguidas en el grupo. Al
+finalizar cada persona debe conocer el grupo que más dinero junto. Nota: maximizar la
+concurrencia. Suponga que para simular la búsqueda de una moneda por parte de una
+persona existe una función Moneda() que retorna el valor de la moneda encontrada.
+
+task type Persona;
+persona:= array(0..N) of persona;
+
+task admin is
+    entry asignarEquipo(id: OUT integer);
+    entry termine(id: IN integer; cant: IN integer);
+end admin;
+
+task type equipo is
+    entry llegaJugador;
+    entry comenzar;
+    entry sumar(c: IN integer);
+    entry grupoGanador(e: OUT integer);
+    entry informeGanador(g IN integer);
+end equipo;
+equipo:= array(0..N) of equipo;
+
+task body persona
+    cantidad: integer = 0;
+    numEquipo: integer = conoceEquipo();
+    equipoGanador: integer;
+begin
+    equipo(numEquipo).llegaJugador;
+    equipo(numEquipo).comenzar;
+    for i 1..15 Loop
+        cantidad:= cantidad + Moneda();
+    end loop;
+    equipo(numEquipo).sumar(cantidad);
+    equipo(numEquipo).grupoGanador(equipoGanador);
+end persona;
+
+task body admin
+    cantGanador: integer:= -1;
+    numGanador: integer:= -1;
+    idAux,cantAux: integer;
+begin
+    for i 1..5 Loop
+        accept asignarEquipo(i: OUT integer);
+    end loop;
+    for i 1..5 Loop
+        accept termine(idAux: IN integer, cantAux: IN integer);
+            if(cantAux > cantGanador) then
+                cantGanador:= cantAux;
+                numGanador:= idAux;
+            end if;
+        end termine;
+    end loop;
+    for i 1..5 Loop
+        equipo(i).informeGanador(numGanador);
+    end loop;
+end admin;
+
+task body equipo
+    id: integer;
+    cantidad: integer := 0;
+    cantAux: integer;
+    idGanador: integer;
+begin
+    admin.asignarEquipo(id);
+    for i 1..4 loop
+        accept llegaJugador;
+    end loop;
+    for i 1..4 loop
+        accept comenzar;
+    end loop;
+    for i 1..15 loop
+        accept cantidad(cantAux: IN integer);
+            cantidad:= cantidad + cantAux;
+        end cantidad;
+    end loop;
+    admin.termine(id,cantidad);
+    accept informeGanador(idGanador: IN integer);
+    for i 1..4 loop
+        accept grupoGanador(idGanador: OUT integer);
+    for
+end equipo;

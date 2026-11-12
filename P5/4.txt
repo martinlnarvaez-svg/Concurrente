@@ -1,0 +1,95 @@
+En una clínica existe un médico de guardia que recibe continuamente peticiones de
+atención de las E enfermeras que trabajan en su piso y de las P personas que llegan a la
+clínica ser atendidos.
+Cuando una persona necesita que la atiendan espera a lo sumo 5 minutos a que el médico lo
+haga, si pasado ese tiempo no lo hace, espera 10 minutos y vuelve a requerir la atención del
+médico. Si no es atendida tres veces, se enoja y se retira de la clínica.
+Cuando una enfermera requiere la atención del médico, si este no lo atiende inmediatamente
+le hace una nota y se la deja en el consultorio para que esta resuelva su pedido en el
+momento que pueda (el pedido puede ser que el médico le firme algún papel). Cuando la
+petición ha sido recibida por el médico o la nota ha sido dejada en el escritorio, continúa
+trabajando y haciendo más peticiones
+El médico atiende los pedidos dándole prioridad a los enfermos que llegan para ser atendidos.
+Cuando atiende un pedido, recibe la solicitud y la procesa durante un cierto tiempo. Cuando
+está libre aprovecha a procesar las notas dejadas por las enfermeras.
+
+medico recibe peticiones de enfemeras y personas
+persona espera 5 mins a ser atendida sino espera 10 mins y vuelve a pedir atencion, si pide 3
+    veces y no es atendido se retira
+si la enfermera no logra ser atendida de inmediato le deja el pedido encolado
+el medico le da prioridad a los enfermos, cuando esta al pedo lee las notas de las enfermeras
+
+task Medico is
+    entry pedidoEnfermera(p: IN texto);
+    entry pedidoPersona(p: IN texto);
+end Medico
+
+type task enfermera;
+Venfermeras:= array(0..N) of enfermera;
+
+type task persona;
+Vpersonas:= array(0..N) or persona;
+
+task admin is
+    entry pedidoEnfermera(p: IN texto);
+    entry pedidoMedico(p: OUT texto);
+end;
+
+task body admin is
+    p: texto;
+    c: cola;
+begin
+    Loop
+        select
+            accept pedidoEnfermera(p);
+                c.push(p);
+            end pedidoEnfermera;
+        or
+            accept pedidoMedico(p);
+                if(c.isEmpty) then
+                    p:= null;
+                else
+                    p:= c.pop;
+                end if;
+            end pedidoMedico;
+        end select;
+    end loop;
+end;
+
+task body enfermera is
+    p: texto;
+begin
+    admin.pedidoEnfermera(p);
+end enfermera;
+
+task body persona is
+    p: texto;
+    intentos: integer := 0;
+begin
+    while(intentos < 3) Loop
+        select
+            medico.pedidoPersona(p);
+        or delay 300
+            intentos:= intentos + 1;
+            if(intentos < 3) then
+                delay 600;
+            end if;
+        end select;
+    end loop;
+end persona;
+
+task body medico is
+
+begin
+    Loop
+        select
+            accept pedidoPersona(p: IN texto);
+                atender(p);
+            end pedidoPersona
+        else
+            if(pedidoPersona'count=0) then
+                admin.pedidoMedico(p);
+                atenderEnfermera(p);
+            end if;
+    end loop;
+end medico;

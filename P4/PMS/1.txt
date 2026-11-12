@@ -1,0 +1,103 @@
+Suponga que existe un antivirus distribuido que se compone de R procesos robots
+Examinadores y 1 proceso Analizador. Los procesos Examinadores están buscando
+continuamente posibles sitios web infectados; cada vez que encuentran uno avisan la
+dirección, esperan la respuesta del Analizador, y luego continúan buscando. El proceso
+Analizador se encarga de hacer todas las pruebas necesarias con cada uno de los sitios 
+encontrados por los robots para determinar si están o no infectados, para luego responderle
+al Examinador.
+a) Analice el problema y defina qué procesos, recursos y comunicaciones serán
+necesarios/convenientes para resolverlo.
+b) Implemente una solución con PMS donde el Analizador no considere el orden
+de los pedidos de los Examinadores.
+c) Implemente una solución con PMS donde el Analizador sí considere el orden de
+los pedidos de los Examinadores.
+d) Si los Examinadores no deben esperar la respuesta del Analizador, ¿cambiaría
+algo de la solución al inciso b)? ¿por qué?
+
+a) y b)
+
+Process Examinador[id: 0..R-1]{
+    Texto problema, url, res;
+    while(true){
+        AnalizarWeb(problema,url);
+        Analizador!infeccion(url,id);
+        Analizador[id]?respuesta(res);
+    }
+}
+
+Process Analizador{
+    Texto url,res;
+    int idExa
+    while(true){
+        Admin!aviso(true)
+        Examinador[*]?infeccion(url,idExa);
+        res = Analizar(url);
+        Examinador[idExa]!respuesta(res);
+    }
+}
+
+c)
+
+Process Examinador[id: 0..R-1]{
+    Texto problema, url, res;
+    while(true){
+        AnalizarWeb(problema,url);
+        Admin!reporte(url,id);
+        Analizador[id]?respuesta(res);
+    }
+}
+
+Process Admin{
+    Texto url;
+    int idExa;
+    Cola c;
+    do Examinador[*]?reporte(url,idExa) -> c.push(url,idExa);
+    [] (not empty(c)); Analizador?pedido() -> 
+        pop(c,(url,idExa));
+        Analizador!reporte(url,idExa);
+    od
+}
+
+Process Analizador{
+    Texto url,res;
+    int idExa
+    while(true){
+        Admin!pedido();
+        Admin?reporte(url,idExa);
+        res = Analizar(url);
+        Examinador[idExa]!respuesta(res);
+    }
+}
+
+d)
+
+Process Examinador[id: 0..R-1]{
+    Texto problema, url, res;
+    while(true){
+        AnalizarWeb(problema,url);
+        Admin!reporte(url);
+    }
+}
+
+Process Admin{
+    Texto url;
+    Cola c;
+    do Examinador[*]?reporte(url) -> c.push(url);
+    [] (not empty(c)); Analizador?pedido() -> 
+        pop(c,(url));
+        Analizador!reporte(url);
+    od
+}
+
+Process Analizador{
+    Texto url,res;
+    while(true){
+        Admin!pedido();
+        Admin?reporte(url);
+        res = Analizar(url);;
+    }
+}
+
+Se quita las variables que almacenaban el id del Examinador que mando el mensaje y se elimina la 
+comunicacion entre Examinador y Analizador, ya que no es necesario saber a quien darle la respuesta
+ya que nadie la pide

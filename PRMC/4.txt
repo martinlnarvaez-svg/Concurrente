@@ -1,0 +1,43 @@
+Resolver el siguiente problema. En una elección estudiantil, se utiliza una máquina para voto
+electrónico. Existen N Personas que votan y una Autoridad de Mesa que les da acceso a la máquina
+de acuerdo con el orden de llegada, aunque ancianos y embarazadas tienen prioridad sobre el resto.
+La máquina de voto sólo puede ser usada por una persona a la vez. Nota: la función Votar() permite
+usar la máquina.
+
+process Persona(id: 0..N-1){
+    Tipo t;
+    Gestion.llega(tipo,id);
+    Votar();
+    Gestion.sale();
+}
+
+process Autoridad{
+    for(int i=0; i<N; i++){
+        Gestion.darPermiso();
+    }
+}
+
+Monitor Gestion(){
+    colaOrdenada fila;
+    cond espera[N];
+    cond hayPedido, esperaUso;
+
+    procedure llega(Tipo in t; int in id){
+        fila.pushOrdenado(t,id); //GUARDA ORDENADO SEGUN EL TIPO, PRIORIZANDO A LAS EMBARAZADAS Y ANCIANOS
+        signal(hayPedido);
+        wait(espera[id]);
+    }
+
+    procedure darPermiso{
+        if(fila.isEmpty){
+            wait(hayPedido);
+        }
+        int idAux = fila.pop;
+        signal(espera[id]);
+        wait(esperaUso);
+    }
+
+    procedure sale(){
+        signal(esperaUso);
+    }
+}

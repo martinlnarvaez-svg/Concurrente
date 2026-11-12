@@ -1,0 +1,136 @@
+1) Se debe simular el uso de un sistema virtual de venta de entradas para un evento musical. El sistema
+cuenta con C cajeros virtuales que atienden indefinidamente. Sin embargo, como la venta de entradas
+comienza a una hora determinada, solo atienden a partir del aviso de un Timer. Una vez que recibem
+dicho aviso, los cajeros atienden de acuerdo con el orden de llegada de los compradores. La atencion
+consiste en recibir la solicitud del comprador (datos para el pago) y responde si pudo comprar (o no)
+junto al comprobante de la operacion. Para este evento se cuenta con E entradas y N compradores, donde
+cada comprador puede solicitar a lo sumo una entrada. Resuelva usando SEMAFOROS.
+
+sem cajeros[C] = (*,0);
+Cola c;
+sem hayCompra = 0;
+sem mutexCola = 1;
+sem espera[N] = (*,0);
+int cantEntradas = E;
+sem mutexEntradas = 1;
+Comprobante comprobante[N];
+Boolean compro[N]:
+Datos datosDePago[N];
+
+process Timer{
+    for(int i=0; i<C-1; i++){
+        V(cajeros[i]);
+    }
+}
+
+process Comprador(id:0..N-1){
+    Datos dat;
+    P(mutexCola);
+    c.push(id);
+    Datos[id] = dat
+    V(mutexCola);
+    V(hayCompra);
+    P(espera);
+    boolean ok = compro[id];
+    if(ok) Comprobante co = comprobante[id];
+}
+
+process cajero(id: 0..C-1){
+    P(cajeros[i]);
+    while(true){
+        P(hayCompra);
+        P(mutexCola);
+        int idAux = c.pop;
+        V(mutexCola);
+        Datos dat = Datos[idAux];
+        P(mutexEntradas)
+        if(cantEntradas > 0 && dat == datosValidos){
+            cantEntradas--;
+            V(mutexEntradas);
+            Comprobante co;
+            comprobante[idAux] = co;
+            Compro[idAux] = true;
+        }
+        else{
+            V(mutexEntradas);
+            Compro[idAux] = false;
+        }
+        V(espera[idAux]);
+    }
+}
+
+
+
+
+2) Existen N personas que desean acceder a un mirador al borde de un lago. Como el mirador es angosto.solo
+puede ser usado por una persona a la vez. Resuelva con MONITORES los dos casos siguientes:
+a. El acceso es por orden de llegada
+b. El acceso al mirador es por orden de llegada, pero dando prioridad a los mayores de 60 años
+
+
+a)
+process Perosna(id:0..N-1){
+    Gestion.llega();
+    //PASANDO
+    Gestion.sale();
+}
+
+Monitor Gestion{
+    int enEspera = 0;
+    boolean libre = true;
+    cond cola;
+
+    procedure llega(){
+        if(!libre){
+            enEspera++;
+            wait(cola);
+        }
+        else libre = false;
+    }
+
+    procedure sale(){
+        if(enEspera > 0){
+            enEspera--;
+            signal(cola);
+        }
+        else{
+            libre = true;
+        }
+    }
+}
+
+b)
+process Perosna(id:0..N-1){
+    int edad;
+    Gestion.llega(id,edad);
+    //PASANDO
+    Gestion.sale();
+}
+
+Monitor Gestion{
+    boolean libre = true;
+    int esperando = 0;
+    int idAux;
+    cond cola[N];
+    colaEspecial fila;
+
+    procedure llega(int in id; int in edad){
+        if(!libre){
+            fila.pushOrdenado(id,edad); //primero las personas mayores de 60
+            esperando++;
+            wait(cola[id]);
+        }
+        else libre = false;
+    }
+
+    procedure sale(){
+        if(esperando > 0){
+            esperando--;
+            fila.pop(idAux);
+            signal(cola[idAux]);
+        }
+        else{
+            libre = true;
+        }
+    }
+}

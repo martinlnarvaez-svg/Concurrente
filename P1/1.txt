@@ -1,0 +1,45 @@
+1. Para el siguiente programa concurrente suponga que todas las variables están inicializadas en
+0 antes de empezar. Indique cual/es de las siguientes opciones son verdaderas:
+a) En algún caso el valor de x al terminar el programa es 56.
+b) En algún caso el valor de x al terminar el programa es 22.
+c) En algún caso el valor de x al terminar el programa es 23.
+
+    P1::
+        If (x = 0) then
+            y:= 4*2;
+            x:= y + 2;
+
+    P2::
+        If (x > 0) then
+            x:= x + 1
+
+    P3::
+        x:= (x*3) + (x*2) + 1;
+
+Traducido a grano fino:
+
+    P1:
+        1 load 4, r1
+        2 mul 3, r1
+        3 store r1, y
+        4 load y, r2
+        5 add 2, r2
+        6. store r2, x
+
+    P2:
+        7 load x, r3
+        8 add 1, r3
+        9 store, r3, x
+
+    P3:
+        10 load x, r4
+        11 load x, r5
+        12 mul 3, r4
+        13 mul 2, r5
+        14 add r4, r5, r6
+        15 add 1, r6
+        16 store r6, x
+
+    Si ejecutamos secuencialmente P1 -> P2 -> P3 x terminara siendo 56.
+    Si ejecutamos 1,2,3,4,5,10,6,11,12,13,14,15,16,7,8,9 x terminara siendo 22
+    Si ejecutamos 1,2,3,4,5,10,6,7,8,9,11,12,13,14,15,16 x termianra siendo 23

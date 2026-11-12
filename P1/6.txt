@@ -1,0 +1,35 @@
+Dada la siguiente solución para el Problema de la Sección Crítica entre dos procesos
+(suponiendo que tanto SC como SNC son segmentos de código finitos, es decir que terminan
+en algún momento), indicar si cumple con las 4 condiciones requeridas:
+
+
+int turno = 1;
+
+
+Process SC1::
+{ while (true)
+ { while (turno == 2) skip;
+ SC;
+ turno = 2;
+ SNC;
+ }
+}
+
+Process SC2::
+{ while (true)
+ { while (turno == 1) skip;
+ SC;
+ turno = 1;
+ SNC;
+ }
+}
+
+Las condiciones a cumplir son: Exclusion mutua, ausencia de dead lock, ausencia de demora innecesaria y eventual entrada
+
+Exclusion mutua Solo un proceso puede estar en la seccion critica a la vez debido al uso de la variable turno. Se genera un bucle en el que SC1 entra por 1ra vez y pone turno en 2 luego
+de ejecutar la SC, luego SC2 ejecuta la SC y al terminarla pone turno en 1.
+
+Ausencia de Dead Lock. Se garantiza ya que los procesos no quedan trabados en ninguna historia, mientras uno ejecuta la SC el otro esta esperando que el proceso de la SC termine dicha
+tarea para que le de su turno y visceversa
+
+Ausencia de demora innecesaria. Se cumple. Un proceso espera su turno, al obtenerlo comienza a hacer la SC sin una espera indefinida o innecesaria 

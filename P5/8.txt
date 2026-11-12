@@ -1,0 +1,58 @@
+Hay un sistema de reconocimiento de huellas dactilares de la policía que tiene 8 Servidores
+para realizar el reconocimiento, cada uno de ellos trabajando con una Base de Datos propia;
+a su vez hay un Especialista que utiliza indefinidamente. El sistema funciona de la siguiente
+manera: el Especialista toma una imagen de una huella (TEST) y se la envía a los servidores
+para que cada uno de ellos le devuelva el código y el valor de similitud de la huella que más
+se asemeja a TEST en su BD; al final del procesamiento, el especialista debe conocer el
+código de la huella con mayor valor de similitud entre las devueltas por los 8 servidores.
+Cuando ha terminado de procesar una huella comienza nuevamente todo el ciclo. Nota:
+suponga que existe una función Buscar(test, código, valor) que utiliza cada Servidor donde
+recibe como parámetro de entrada la huella test, y devuelve como parámetros de salida el
+código y el valor de similitud de la huella más parecida a test en la BD correspondiente.
+Maximizar la concurrencia y no generar demora innecesaria.
+
+task especialista is
+    entry analizar(huella: OUT texto);
+    entry resultado(r: IN integer, v: IN integer);
+    entry finalizar;
+end especialista;
+task body especialista is
+    huella: texto;
+    valor,valorAux,cod,codAux: integer;
+begin
+    loop;
+        valorAux:= -1;
+        huella:= generarHuella();
+        for i 1..16 loop
+            select
+                accept analizar(huella);
+            or
+                accept resultado(codAux,valorAux);
+                    if(valorAux > valor) then
+                        cod:= codAux;
+                        valor:= valorAux;
+                    end if;
+                end resultado;
+            end select;
+        end loop;
+        for i 1..8 loop
+            accept finalizar;
+        end loop;
+    end loop;
+end;
+
+task type servidor;
+Vservidores: array(1..8) of servidor;
+
+task body servidor is
+    huella: texto;
+    valor: integer;
+    codigo: integer;
+begin
+    loop
+        especialista.analizar(huella);
+        Buscar(huella, codigo, valor);
+        especialista.resultado(valor, codigo);
+        especialista.finalizar;
+    end loop;
+end servidor;

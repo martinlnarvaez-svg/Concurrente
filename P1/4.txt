@@ -1,0 +1,17 @@
+Resolver con SENTENCIAS AWAIT (<> y <await B; S>). Un sistema operativo mantiene
+5 instancias de un recurso almacenadas en una cola, cuando un proceso necesita usar una
+instancia del recurso la saca de la cola, la usa y cuando termina de usarla la vuelve a depositar. 
+
+recursoQueue Q[5]; cant = 5;
+
+process processoDelSO[id: 0..N-1]{
+    recursoQueue rec;
+    while(true){
+        <await (cant > 0); 
+        rec = q.pop;
+        cant--;>
+        USANDO RECURSO
+        <c.push(rec);
+        cant++;>
+    }
+}
