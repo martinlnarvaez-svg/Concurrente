@@ -69,7 +69,10 @@ Process Admin{
     cola c;
     int idP;
     for int i=0; i<P*2; i++{
-        if Persona[*]?aviso(idP) -> c.push(idP);
-        [] (not empty(c)); Empleado?aviso() -> Empleado!enviarId(c.pop);
+        if Persona[*]?aviso(idP) -> 
+            c.push(idP);
+        [] (not empty(c)); Empleado?aviso() -> 
+            Empleado!enviarId(c.pop);
+        fi
     } 
 }

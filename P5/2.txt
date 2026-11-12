@@ -26,7 +26,6 @@ begin
 end cliente;
 
 task body empleado is
-
 begin
     Loop
         accept atencion(Datos: IN texto, R: OUT texto) do

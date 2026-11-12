@@ -37,8 +37,10 @@ Process Analizador{
 Process Admin{
     cola muestras;
     Texto muestra;
-    do Preparador?muestraPreparada(muestra) -> muestras.push(muestra);
-    [] (not empty(muestras)); ArmadorArchivador?pedido() -> ArmadorArchivador!entregaPedido(muestras.pop);
+    do Preparador?muestraPreparada(muestra) -> 
+        muestras.push(muestra);
+    [] (not empty(muestras)); ArmadorArchivador?pedido() -> 
+        ArmadorArchivador!entregaPedido(muestras.pop);
     od
 }
 

@@ -9,8 +9,8 @@ al cliente correspondiente.
 Nota: maximizar la concurrencia.
 
 chan pedidos(Texto);
-chan recibirPedido[C-1](Texto);
-chan retornarPedido[2](int,Texto);
+chan recibirPedido[C](Texto);
+chan retornarPedido[3](int,Texto);
 chan pedidosEnCocina(int,Texto);
 
 Process Cocinero[id: 0..1]{
@@ -41,7 +41,7 @@ Process Vendedor[id: 0..2]{
     Texto pedido;
     while(true){
         send recibirPedido(id);
-        receive retornarPedido(idCli,pedido);
+        receive retornarPedido[id](idCli,pedido);
         if(idCli = -1) delay 60 + random(0..120)
         else send pedidosEnCocina(idCli,pedido);
     }

@@ -12,7 +12,7 @@ a)
 
 Process Alumno[id: 0..N-1]{
     Texto examen;
-    Admin!examenTerminado(examen);
+    Admin!examenTerminado(examen,id);
     Profesor?correcion(examen);
 }
 
@@ -20,17 +20,21 @@ Process Profesor{
     Texto examen;
     for i=0; i<N; i++{
         Admin!aviso();
-        Admin?enviarExamen(examen);
+        Admin?enviarExamen(examen,id);
         Texto corregido = corregir(examen);
-        Alumno!correcion(corregido);
+        Alumno[id]!correcion(corregido);
     }
 }
 
 Process Admin{
     cola terminados;
+    id integer;
     for int i=0; i<N*2; i++{
-        if Alumno?examenTerminado(examen) -> terminados.push(examen);
-        [] (not empty(terminados)); Profesor?aviso() -> Profesor!enviarExamen(cola.pop);
+        if Alumno?examenTerminado(examen,id) -> 
+            terminados.push(examen,id);
+        [] (not empty(terminados)); Profesor?aviso() -> 
+            Profesor!enviarExamen(cola.pop);
+        fi
     }
 }
 
@@ -59,12 +63,15 @@ Process Admin{
     cola terminados;
     int idP,idA;
     for int i=0; i<N*2; i++{
-        if Alumno[*]?examenTerminado(examen,idA) -> terminados.push(examen,idA);
-        [] (not empty(terminados)); Profesor[*]?aviso(idP) -> Profesor[idP]!enviarExamen(cola.pop);
+        if Alumno[*]?examenTerminado(examen,idA) -> 
+            terminados.push(examen,idA);
+        [] (not empty(terminados)); Profesor[*]?aviso(idP) -> 
+            Profesor[idP]!enviarExamen(cola.pop);
+        fi
     }
     for i=0; i<P; i++{
-        Profesor?aviso(idP);
-        Profesor!enviarExamen(null,null);
+        Profesor[*]?aviso(idP);
+        Profesor[idP]!enviarExamen(null,null);
     }
 }
 
@@ -99,11 +106,14 @@ Process Admin{
     for i=0; i<N; i++ Alumno[i]!arranca();
 
     for i=0; i<N*2; i++{
-        if Alumno[*]?examenTerminado(examen,idA) -> terminados.push(examen,idA);
-        [] (not empty(terminados)); Profesor[*]?aviso(idP) -> Profesor[idP]!enviarExamen(cola.pop);
+        if Alumno[*]?examenTerminado(examen,idA) -> 
+            terminados.push(examen,idA);
+        [] (not empty(terminados)); Profesor[*]?aviso(idP) -> 
+            Profesor[idP]!enviarExamen(cola.pop);
+        fi
     }
     for i=0; i<P; i++{
-        Profesor?aviso(idP);
-        Profesor!enviarExamen(null,null);
+        Profesor[*]?aviso(idP);
+        Profesor[idP]!enviarExamen(null,null);
     }
 }

@@ -51,7 +51,8 @@ Process Admin{
     Texto url;
     int idExa;
     Cola c;
-    do Examinador[*]?reporte(url,idExa) -> c.push(url,idExa);
+    do Examinador[*]?reporte(url,idExa) -> 
+        c.push(url,idExa);
     [] (not empty(c)); Analizador?pedido() -> 
         pop(c,(url,idExa));
         Analizador!reporte(url,idExa);

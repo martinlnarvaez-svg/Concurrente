@@ -75,18 +75,21 @@ Process Empleado[id: 0..1]{
     while(true){
         send pedido(id);
         receive siguiente[id](preg,idC)
-        res ResolverConsulta(preg)
-        send respuestas[idC,res]
+        if(res = "VACIO") delay(15 mins)
+        else{
+            res ResolverConsulta(preg)
+            send respuestas[idC,res]
+        }
     }
 }
 
 process Admin{
-    txt res, preg
+    txt res
     int idE, idC
     while(true){
         receive pedido(idE)
         if(empty(cola)) res = "VACIO"
-        else receive cola(preg,idC)
-        send siguiente[idE](preg,idC);
+        else receive cola(res,idC)
+        send siguiente[idE](res,idC);
     }
 }
