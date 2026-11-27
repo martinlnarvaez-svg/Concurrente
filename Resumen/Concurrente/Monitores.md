@@ -142,7 +142,7 @@ Monitor cajero{
 ~~~
 Como se pide tener un prioridad (la edad de las personas) el procedure pasar pide que se le envie la edad y el id por parametro, la edad para encolar ordenado y el id para hacer el signal. Una vez llegados al procedure salir si hay gente esperando hacemos un pop, en el que extraemos el id de la persona mas anciana y le hacemos el signal
 ### 4
-- En un banco hay 3 empleado. Y hay N clientes que deben ser atendidos por uno de ellos (cualquiera) de acuerdo al orden de llegada. Cuando uno de los empleados lo atiende el cliente le entrega los papeles y espera el resultado
+- En un banco hay 3 empleados. Y hay N clientes que deben ser atendidos por uno de ellos (cualquiera) de acuerdo al orden de llegada. Cuando uno de los empleados lo atiende el cliente le entrega los papeles y espera el resultado
 ~~~
 Process cliente[id: 0..N-1]{
 	int idE;
@@ -217,7 +217,12 @@ Monitor escritorio[id: 0..2]{
 	}
 }
 ~~~
-Cuando un cliente llega le avisa al banco que llego, este le asigna el id del empleado que lo va a atender (si no hay empleados libres lo hace esperar encolandolo para mantener el orden), por otro lado los empleados van avisando que estan libres, enviandoles sus ids al banco. Ahi es cuando se desencola el cliente y se le asinga un empleado, el cliente se comunica con el escritorio del empleado asignado y le solicita atencion, enviandole un papel y esperando un resultado. Mientras tanto el empleado le dice al escritorio suyo esperarDatos, los recibe, resuelve y envia el resultado al escritorio. **IMPORTANTE** usar la variable booleana en escritorio para que se produzca deadlock
+Cuando un cliente llega le avisa al banco que llego, este le asigna el id del empleado que lo va a atender (si no hay empleados libres lo hace esperar encolandolo para mantener el orden), por otro lado los empleados van avisando que estan libres, enviandoles sus ids al banco. Ahi es cuando se desencola el cliente y se le asinga un empleado, el cliente se comunica con el escritorio del empleado asignado y le solicita atencion, enviandole un papel y esperando un resultado. Mientras tanto el empleado le dice al escritorio suyo esperarDatos, los recibe, resuelve y envia el resultado al escritorio. **IMPORTANTE** usar la variable booleana en escritorio para que se produzca deadlock<br>
+
+**Cliente**: <br>
+	avisa a gestión que llega (espera el id del empleado) -> va con el empleado deja los datos y espera resultados<br>
+**Empleado**:<br>
+	avisa a gestión que esta libre -> en su escritorio espera que llegue el empleado y toma los datos -> resuelve -> en su escritorio deja los resultados, le avisa al cliente y espera a que se retire
 ### 5
 - Se debe simular un partido de futbol 11. Cuando los 22 jugadores llegaron a la cancha juegan durante 90 minutos y luego todos se retiran
 ~~~
