@@ -1,4 +1,4 @@
-- Los programas se componen solo de procesos (NO EXISTEN VARIABLES COMPARTIDAS)
+s- Los programas se componen solo de procesos (NO EXISTEN VARIABLES COMPARTIDAS)
 - los canales son de tipo LINK (unico emisor y un receptor) y sincronicos. Son estructuras implicitas y no se deben declarar
 - Los procesos interactuan entre ellos UNICAMENTE por medio del envio de mensajes
 - No se requiere sincronización por exclusión mutua ya que no existen las variables compartidas
